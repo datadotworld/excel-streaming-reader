@@ -1,5 +1,7 @@
 package com.monitorjbl.xlsx.impl;
 
+import com.monitorjbl.xlsx.exceptions.MissingSheetException;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.udf.UDFFinder;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -9,6 +11,7 @@ import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.PictureData;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.SheetVisibility;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import java.io.IOException;
@@ -40,6 +43,14 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
   @Override
   public Iterator<Sheet> iterator() {
     return reader.iterator();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Iterator<Sheet> sheetIterator() {
+    return iterator();
   }
 
   /**
@@ -91,7 +102,11 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    */
   @Override
   public Sheet getSheet(String name) {
-    return reader.getSheets().get(getSheetIndex(name));
+    int index = getSheetIndex(name);
+    if(index == -1) {
+      throw new MissingSheetException("Sheet '" + name + "' does not exist");
+    }
+    return reader.getSheets().get(index);
   }
 
   /**
@@ -204,23 +219,7 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    * Not supported
    */
   @Override
-  public Iterator<Sheet> sheetIterator() {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
   public void removeSheetAt(int index) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public void setRepeatingRowsAndColumns(int sheetIndex, int startColumn, int endColumn, int startRow, int endRow) {
     throw new UnsupportedOperationException();
   }
 
@@ -237,6 +236,14 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    */
   @Override
   public Font findFont(short boldWeight, short color, short fontHeight, String name, boolean italic, boolean strikeout, short typeOffset, byte underline) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public Font findFont(boolean b, short i, short i1, String s, boolean b1, boolean b2, short i2, byte b3) {
     throw new UnsupportedOperationException();
   }
 
@@ -268,7 +275,7 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    * Not supported
    */
   @Override
-  public short getNumCellStyles() {
+  public int getNumCellStyles() {
     throw new UnsupportedOperationException();
   }
 
@@ -276,7 +283,7 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    * Not supported
    */
   @Override
-  public CellStyle getCellStyleAt(short idx) {
+  public CellStyle getCellStyleAt(int i) {
     throw new UnsupportedOperationException();
   }
 
@@ -301,6 +308,22 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    */
   @Override
   public Name getName(String name) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public List<? extends Name> getNames(String s) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public List<? extends Name> getAllNames() {
     throw new UnsupportedOperationException();
   }
 
@@ -341,6 +364,14 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    */
   @Override
   public void removeName(String name) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public void removeName(Name name) {
     throw new UnsupportedOperationException();
   }
 
@@ -468,6 +499,22 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    * Not supported
    */
   @Override
+  public SheetVisibility getSheetVisibility(int i) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public void setSheetVisibility(int i, SheetVisibility sheetVisibility) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
   public void addToolPack(UDFFinder toopack) {
     throw new UnsupportedOperationException();
   }
@@ -485,6 +532,22 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
    */
   @Override
   public boolean getForceFormulaRecalculation() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public SpreadsheetVersion getSpreadsheetVersion() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public int addOlePackage(byte[] bytes, String s, String s1, String s2) throws IOException {
     throw new UnsupportedOperationException();
   }
 }

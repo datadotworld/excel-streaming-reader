@@ -3,6 +3,7 @@ package com.monitorjbl.xlsx.impl;
 import com.monitorjbl.xlsx.exceptions.NotSupportedException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
@@ -111,6 +112,20 @@ public class StreamingRow implements Row {
     return cellMap.firstKey().shortValue();
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Cell getCell(int cellnum, MissingCellPolicy policy) {
+    StreamingCell cell = (StreamingCell) cellMap.get(cellnum);
+    if(policy == MissingCellPolicy.CREATE_NULL_AS_BLANK) {
+      if(cell == null) { return new StreamingCell(cellnum, rowIndex, false); }
+    } else if(policy == MissingCellPolicy.RETURN_BLANK_AS_NULL) {
+      if(cell == null || cell.getCellTypeEnum() == CellType.BLANK) { return null; }
+    }
+    return cell;
+  }
+
   /* Not supported */
 
   /**
@@ -133,6 +148,14 @@ public class StreamingRow implements Row {
    * Not supported
    */
   @Override
+  public Cell createCell(int i, CellType cellType) {
+    throw new NotSupportedException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
   public void removeCell(Cell cell) {
     throw new NotSupportedException();
   }
@@ -142,14 +165,6 @@ public class StreamingRow implements Row {
    */
   @Override
   public void setRowNum(int rowNum) {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public Cell getCell(int cellnum, MissingCellPolicy policy) {
     throw new NotSupportedException();
   }
 

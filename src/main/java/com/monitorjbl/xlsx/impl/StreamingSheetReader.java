@@ -1,6 +1,7 @@
 package com.monitorjbl.xlsx.impl;
 
 import com.monitorjbl.xlsx.exceptions.CloseException;
+import com.monitorjbl.xlsx.exceptions.ParseException;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -43,6 +44,9 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final Set<Integer> hiddenColumns = new HashSet<>();
 
   private int lastRowNum;
+  private int currentRowNum;
+  private int firstColNum = 0;
+  private int currentColNum;
   private int rowCacheSize;
   private List<Row> rowCache = new ArrayList<>();
   private Iterator<Row> rowCacheIterator;
@@ -74,9 +78,8 @@ public class StreamingSheetReader implements Iterable<Row> {
       rowCacheIterator = rowCache.iterator();
       return rowCacheIterator.hasNext();
     } catch(XMLStreamException | SAXException e) {
-      log.debug("End of stream");
+      throw new ParseException("Error reading XML stream", e);
     }
-    return false;
   }
 
   /**
@@ -96,14 +99,15 @@ public class StreamingSheetReader implements Iterable<Row> {
 
       if("row".equals(tagLocalName)) {
         Attribute rowNumAttr = startElement.getAttributeByName(new QName("r"));
-        Attribute isHiddenAttr = startElement.getAttributeByName(new QName("hidden"));
-        final int rowIndex ;
-        if(rowNumAttr!=null)
+        int rowIndex = currentRowNum;
+        if(rowNumAttr != null) {
           rowIndex = Integer.parseInt(rowNumAttr.getValue()) - 1;
-        else
-          rowIndex = 0;
+          currentRowNum = rowIndex;
+        }
+        Attribute isHiddenAttr = startElement.getAttributeByName(new QName("hidden"));
         boolean isHidden = isHiddenAttr != null && ("1".equals(isHiddenAttr.getValue()) || "true".equals(isHiddenAttr.getValue()));
         currentRow = new StreamingRow(rowIndex, isHidden);
+        currentColNum = firstColNum;
       } else if("col".equals(tagLocalName)) {
         Attribute isHiddenAttr = startElement.getAttributeByName(new QName("hidden"));
         boolean isHidden = isHiddenAttr != null && ("1".equals(isHiddenAttr.getValue()) || "true".equals(isHiddenAttr.getValue()));
@@ -120,8 +124,12 @@ public class StreamingSheetReader implements Iterable<Row> {
       } else if("c".equals(tagLocalName)) {
         Attribute ref = startElement.getAttributeByName(new QName("r"));
 
-        String[] coord = ref.getValue().split("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
-        currentCell = new StreamingCell(CellReference.convertColStringToIndex(coord[0]), Integer.parseInt(coord[1]) - 1, use1904Dates);
+        if(ref != null) {
+          String[] coord = ref.getValue().split("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
+          currentCell = new StreamingCell(CellReference.convertColStringToIndex(coord[0]), Integer.parseInt(coord[1]) - 1, use1904Dates);
+        } else {
+          currentCell = new StreamingCell(currentColNum, currentRowNum, use1904Dates);
+        }
         setFormatString(startElement, currentCell);
 
         Attribute type = startElement.getAttributeByName(new QName("t"));
@@ -140,6 +148,8 @@ public class StreamingSheetReader implements Iterable<Row> {
           } catch(NumberFormatException nfe) {
             log.warn("Ignoring invalid style index {}", indexStr);
           }
+        } else {
+          currentCell.setCellStyle(stylesTable.getStyleAt(0));
         }
       } else if("dimension".equals(tagLocalName)) {
         Attribute refAttr = startElement.getAttributeByName(new QName("ref"));
@@ -151,6 +161,12 @@ public class StreamingSheetReader implements Iterable<Row> {
               try {
                 lastRowNum = Integer.parseInt(ref.substring(i + 1)) - 1;
               } catch(NumberFormatException ignore) { }
+              break;
+            }
+          }
+          for(int i = 0; i < ref.length(); i++) {
+            if(!Character.isAlphabetic(ref.charAt(i))) {
+              firstColNum = CellReference.convertColStringToIndex(ref.substring(0, i));
               break;
             }
           }
@@ -171,8 +187,10 @@ public class StreamingSheetReader implements Iterable<Row> {
         currentCell.setContents(formattedContents());
       } else if("row".equals(tagLocalName) && currentRow != null) {
         rowCache.add(currentRow);
+        currentRowNum++;
       } else if("c".equals(tagLocalName)) {
         currentRow.getCellMap().put(currentCell.getColumnIndex(), currentCell);
+        currentColNum++;
       } else if("f".equals(tagLocalName)) {
         currentCell.setFormula(lastContents);
       }
@@ -263,8 +281,11 @@ public class StreamingSheetReader implements Iterable<Row> {
   String formattedContents() {
     switch(currentCell.getType()) {
       case "s":           //string stored in shared table
-        int idx = Integer.parseInt(lastContents);
-        return new XSSFRichTextString(sst.getEntryAt(idx)).toString();
+        if (!lastContents.isEmpty()) {
+            int idx = Integer.parseInt(lastContents);
+            return new XSSFRichTextString(sst.getEntryAt(idx)).toString();
+        }
+        return lastContents;
       case "inlineStr":   //inline string (not in sst)
         return new XSSFRichTextString(lastContents).toString();
       case "str":         //forumla type
@@ -293,8 +314,11 @@ public class StreamingSheetReader implements Iterable<Row> {
   String unformattedContents() {
     switch(currentCell.getType()) {
       case "s":           //string stored in shared table
-        int idx = Integer.parseInt(lastContents);
-        return new XSSFRichTextString(sst.getEntryAt(idx)).toString();
+        if (!lastContents.isEmpty()) {
+            int idx = Integer.parseInt(lastContents);
+            return new XSSFRichTextString(sst.getEntryAt(idx)).toString();
+        }
+        return lastContents;
       case "inlineStr":   //inline string (not in sst)
         return new XSSFRichTextString(lastContents).toString();
       default:
