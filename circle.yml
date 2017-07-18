@@ -26,7 +26,7 @@ test:
     - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
 
 deployment:
-  master:
+  releases:
     branch: master
     commands:
-      - mvn deploy -s settings.xml -q
+      - ./cicd/handle-mvn-release.sh
