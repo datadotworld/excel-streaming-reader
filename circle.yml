@@ -2,15 +2,8 @@ machine:
   java:
     version: openjdk8
 
-  node:
-    version: 6.9.3
-
   environment:
-    MAVEN_OPTS: "-Xmx1024m -Xms1024m"
-    _JAVA_OPTIONS: "-Xmx768m -Xms768m"
-    AWS_DEFAULT_REGION: "us-east-1"
-    PATH: $(dirname `pyenv shell 2.7.10; pyenv which python2`):$PATH
-    DW_PROJECT_HOME: $HOME
+    _JAVA_OPTIONS: "-Xmx512m -Xms512m"
 
 dependencies:
   override:
@@ -29,4 +22,5 @@ deployment:
   releases:
     branch: master
     commands:
-      - ./cicd/handle-mvn-release.sh
+      - mvn deploy -s settings.xml
+      - ./mvn-release.sh
