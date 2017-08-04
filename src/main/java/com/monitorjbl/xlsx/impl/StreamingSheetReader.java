@@ -148,7 +148,7 @@ public class StreamingSheetReader implements Iterable<Row> {
           } catch(NumberFormatException nfe) {
             log.warn("Ignoring invalid style index {}", indexStr);
           }
-        } else {
+        } else if(stylesTable != null) {
           currentCell.setCellStyle(stylesTable.getStyleAt(0));
         }
       } else if("dimension".equals(tagLocalName)) {
@@ -253,7 +253,7 @@ public class StreamingSheetReader implements Iterable<Row> {
 
     if(cellStyleString != null) {
       style = stylesTable.getStyleAt(Integer.parseInt(cellStyleString));
-    } else if(stylesTable.getNumCellStyles() > 0) {
+    } else if(stylesTable != null && stylesTable.getNumCellStyles() > 0) {
       style = stylesTable.getStyleAt(0);
     }
 
