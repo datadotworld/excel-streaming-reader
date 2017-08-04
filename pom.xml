@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.monitorjbl</groupId>
     <artifactId>xlsx-streamer</artifactId>
-    <version>1.2.0-dw4-SNAPSHOT</version>
+    <version>1.2.0-dw4</version>
     <name>Streaming Excel reader</name>
     <description>Streaming Excel reader</description>
     <url>https://github.com/monitorjbl/excel-streaming-reader</url>
@@ -135,7 +135,7 @@
         <connection>scm:git:git://github.com/datadotworld/excel-streaming-reader.git</connection>
         <developerConnection>scm:git:git@github.com:datadotworld/excel-streaming-reader.git</developerConnection>
         <url>https://github.com/datadotworld/excel-streaming-reader</url>
-        <tag>HEAD</tag>
+        <tag>v1.2.0-dw4</tag>
     </scm>
 
     <dependencies>
